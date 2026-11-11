@@ -113,14 +113,15 @@ Abra <http://localhost:8000>.
 | **02 Canais** | Lista os canais que você segue; clique para ligar/desligar (ON/OFF). Canais novos entram ligados. |
 | **03 Histórico** | Avisos enviados, com filtros por texto, item, canal, preço mín./máx. e período. Atualiza a cada 30 s e mostra os 500 mais recentes. |
 
-O indicador **API ONLINE/OFFLINE** no topo mostra se a página está conseguindo falar com o backend.
+A página se atualiza sozinha a cada 30 s: itens, canais (inclusive mudanças feitas pelo `/canais` no bot), histórico e o indicador **API ONLINE/OFFLINE**, que mostra se a página está conseguindo falar com o backend.
 
 ### Bot do Telegram
 
 | Comando | O que faz |
 |---|---|
-| `/start` | Libera o bot para te mandar mensagens (obrigatório uma vez). |
+| `/start` | Libera o bot para te mandar mensagens (obrigatório uma vez) e mostra os comandos. |
 | `/canais` | Atualiza a lista de canais e mostra botões para ligar/desligar cada um. |
+| `/testar` | Diagnóstico: roda as regras nas últimas 50 mensagens de cada canal ligado (sem avisar nem gravar) e compara a mensagem mais recente dos canais com o que o monitor recebeu ao vivo. |
 
 Só a sua conta pode usar os botões; outras pessoas recebem "Sem permissão".
 
@@ -152,6 +153,7 @@ Arquivo `.env` na raiz (modelo em [.env.example](.env.example)):
 | `API_ID` | sim | api_id do <https://my.telegram.org> |
 | `API_HASH` | sim | api_hash do <https://my.telegram.org> |
 | `BOT_TOKEN` | sim | token do @BotFather |
+| `LOG_LEVEL` | não | `WARNING` (padrão), `INFO` ou `DEBUG`. Para depurar: `LOG_LEVEL=INFO docker compose up -d backend`. |
 | `DB_PATH` | não | caminho do banco dentro do container (padrão `/data/promo.db`). As sessões do Telegram ficam na mesma pasta. |
 
 ## API HTTP
@@ -212,7 +214,7 @@ curl 'localhost:8000/api/hits?item=air%20fryer&max=350'
 ```sh
 cd backend
 python3 -m venv .venv && . .venv/bin/activate
-pip install telethon==1.36.0
+pip install telethon==1.45.0
 export $(grep -v '^#' ../.env | xargs) DB_PATH=../data/promo.db
 python main.py                 # API em :8000
 ```
@@ -243,6 +245,12 @@ docker compose down                   # parar tudo
 git pull && docker compose up -d --build   # atualizar
 ```
 
+A cada 5 min o log mostra uma linha de saúde, e cada aviso enviado gera uma linha `[aviso]`:
+
+```
+[status] últimos 5 min: 131 mensagens de canais, 0 avisos, 254 updates do Telegram (conexão viva se > 0)
+```
+
 **Backup**: copie a pasta `data/`, que contém `promo.db` (itens, canais e histórico) e as sessões. Para começar do zero, apague `data/promo.db`. Para trocar de conta, apague `data/session.session` e refaça o [primeiro login](#4-primeiro-login-só-uma-vez).
 
 ## Solução de problemas
@@ -250,7 +258,8 @@ git pull && docker compose up -d --build   # atualizar
 | Sintoma | Causa / solução |
 |---|---|
 | O login pede "phone (or bot token)" | É o login da **sua conta**: digite o telefone com DDI. O token do bot é lido do `.env`. |
-| Não recebo avisos | Envie `/start` para o bot, confira se o canal está **ON** e se o item não tem preço máximo menor que o da oferta. Veja `docker compose logs -f backend`. |
+| Não recebo avisos | Envie `/start` para o bot e depois `/testar`. Confira se o canal está **ON**, se o preço máximo não está abaixo da oferta e se os termos aparecem do jeito que os canais escrevem ("lavadora" ≠ "máquina de lavar"). |
+| Log mostra `0 updates do Telegram` | A conexão não está recebendo nada. Gere a imagem de novo (`docker compose up -d --build`) e veja se o Telethon está atualizado; a 1.36 parou de receber eventos. |
 | Página mostra **API OFFLINE** | O backend caiu ou ainda está subindo: `docker compose ps` e `docker compose logs backend`. |
 | Lista de canais vazia | O login ainda não foi feito ou não terminou. Ela é preenchida ao iniciar e a cada `/canais`. |
 | `my.telegram.org` mostra "ERROR" | Desative bloqueadores ou VPN e tente de novo. |
