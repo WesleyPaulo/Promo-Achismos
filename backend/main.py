@@ -1,4 +1,6 @@
 import asyncio
+import logging
+import os
 import threading
 from http.server import ThreadingHTTPServer
 
@@ -7,6 +9,7 @@ from db.database import connect, init
 from routes.api import Api
 
 if __name__ == "__main__":
+    logging.basicConfig(level=os.getenv("LOG_LEVEL", "WARNING"), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     with connect() as con:
         init(con)
     threading.Thread(target=ThreadingHTTPServer(("0.0.0.0", 8000), Api).serve_forever, daemon=True).start()

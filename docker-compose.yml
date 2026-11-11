@@ -2,6 +2,8 @@ services:
   backend:
     build: ./backend
     env_file: .env
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
     volumes: ["./data:/data"]
     restart: unless-stopped
   frontend:

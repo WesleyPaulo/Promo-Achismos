@@ -5,17 +5,24 @@ from services.matcher import dedup_key, matches, prices
 DEDUP_SECONDS = 12 * 3600
 
 
+def best_price(text):
+    return min(prices(text), default=None)
+
+
+def price_ok(item, price):
+    """Item sem preço máximo sempre passa; com máximo, exige preço na mensagem e ≤ máximo."""
+    return item["max_price"] is None or (price is not None and price <= item["max_price"])
+
+
 def process(con, chat_id, title, link, text, now):
     """Grava os avisos novos de uma mensagem de canal e devolve os termos que dispararam."""
     if not repo.ensure_channel(con, chat_id, title):
         return []
-    price = min(prices(text), default=None)
+    price = best_price(text)
     key = dedup_key(text, price)
     hits = []
     for item in repo.list_items(con):
-        if not matches(item["terms"], text):
-            continue
-        if item["max_price"] is not None and (price is None or price > item["max_price"]):
+        if not matches(item["terms"], text) or not price_ok(item, price):
             continue
         if repo.recent_hit_exists(con, item["id"], key, now - DEDUP_SECONDS):
             continue
