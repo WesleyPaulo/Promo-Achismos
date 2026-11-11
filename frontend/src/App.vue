@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onMounted, onUnmounted, ref, watch } from "vue"
 import { getJson } from "./services/api"
 import { pad } from "./utils/format"
 import ItemsCard from "./components/ItemsCard.vue"
@@ -21,14 +21,21 @@ const tabs = computed(() => [
 const tab = ref(location.hash.slice(1) || "itens")
 watch(tab, (t) => history.replaceState(null, "", `#${t}`))
 
-onMounted(async () => {
+async function refresh() {
   try {
     await Promise.all([loadItems(), loadChannels()])
     online.value = true
   } catch {
     online.value = false
   }
+}
+
+let timer
+onMounted(() => {
+  refresh()
+  timer = setInterval(refresh, 30000)
 })
+onUnmounted(() => clearInterval(timer))
 </script>
 
 <template>
