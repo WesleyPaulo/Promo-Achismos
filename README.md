@@ -115,6 +115,13 @@ Abra <http://localhost:8000>.
 
 A página se atualiza sozinha a cada 30 s: itens, canais (inclusive mudanças feitas pelo `/canais` no bot), histórico e o indicador **API ONLINE/OFFLINE**, que mostra se a página está conseguindo falar com o backend.
 
+**Notificações no navegador**: clique em **NOTIF** no topo e permita quando o navegador pedir. A cada ocorrência nova aparece uma notificação do sistema (item, preço, canal); clicar abre a mensagem no Telegram. Detalhes:
+
+- Funciona com o site **aberto em alguma aba**, mesmo em segundo plano ou minimizado. Com o site fechado, quem avisa é o bot do Telegram.
+- Exige `http://localhost` ou HTTPS. Pelo IP da rede (`http://192.168...`) o navegador não permite notificações.
+- Em abas em segundo plano o navegador pode espaçar as checagens para cerca de 1 por minuto.
+- Se aparecer **NOTIF BLOQUEADAS**, libere em *Permissões do site*, no ícone ao lado do endereço.
+
 ### Bot do Telegram
 
 | Comando | O que faz |
@@ -167,7 +174,7 @@ O backend escuta na porta 8000 dentro da rede do Docker. Por fora, use `http://l
 | `DELETE` | `/api/items/{id}` | Remove um item. |
 | `GET` | `/api/channels` | Lista os canais (`id`, `title`, `enabled`). |
 | `POST` | `/api/channels/{id}` | Liga/desliga o canal. |
-| `GET` | `/api/hits` | Histórico (até 500, mais recentes primeiro). Filtros opcionais na query: `q` (texto), `item` (termo exato), `channel` (id), `min`/`max` (preço), `from`/`to` (unix timestamp). |
+| `GET` | `/api/hits` | Histórico (até 500, mais recentes primeiro). Filtros opcionais na query: `q` (texto), `item` (termo exato), `channel` (id), `min`/`max` (preço), `from`/`to` (unix timestamp), `after` (só ids maiores que este). |
 
 Exemplo:
 
@@ -197,7 +204,7 @@ curl 'localhost:8000/api/hits?item=air%20fryer&max=350'
 │   ├── src/
 │   │   ├── App.vue          layout e abas
 │   │   ├── components/      ItemsCard, ChannelsCard, HistoryCard
-│   │   ├── services/api.js  chamadas à API
+│   │   ├── services/        api.js (chamadas à API), notifications.js (notificações do navegador)
 │   │   ├── utils/format.js  formatação de preço e data
 │   │   └── style.css        tema (cores, fonte) e classes base
 │   ├── nginx.conf           serve o build e repassa /api ao backend

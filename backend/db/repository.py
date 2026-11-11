@@ -51,6 +51,7 @@ HIT_FILTERS = {  # parâmetro da URL -> trecho SQL fixo (valores sempre via ?)
     "max": "price <= ?",
     "from": "ts >= ?",
     "to": "ts <= ?",
+    "after": "id > ?",  # só avisos novos (usado pelas notificações do site)
 }
 
 

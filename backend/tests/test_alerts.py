@@ -35,4 +35,5 @@ assert len(repo.search_hits(con, {})) == 3
 assert len(repo.search_hits(con, {"channel": "1"})) == 2
 assert len(repo.search_hits(con, {"max": "500", "q": "cafeteira"})) == 1
 assert len(repo.search_hits(con, {"from": "1", "item": "rtx 4070"})) == 1
+assert [h["terms"] for h in repo.search_hits(con, {"after": "2"})] == ["cafeteira"]
 print("ok")

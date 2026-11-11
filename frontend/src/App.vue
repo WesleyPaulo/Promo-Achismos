@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from "vue"
 import { getJson } from "./services/api"
+import { isOn, notifyHits, permission, setOn, supported } from "./services/notifications"
 import { pad } from "./utils/format"
 import ItemsCard from "./components/ItemsCard.vue"
 import ChannelsCard from "./components/ChannelsCard.vue"
@@ -21,9 +22,24 @@ const tabs = computed(() => [
 const tab = ref(location.hash.slice(1) || "itens")
 watch(tab, (t) => history.replaceState(null, "", `#${t}`))
 
+const notify = ref(isOn())
+const notifyPerm = ref(permission())
+async function toggleNotify() {
+  notify.value = await setOn(!notify.value)
+  notifyPerm.value = permission()
+}
+
+// Avisos novos desde a última checagem; o 1º carregamento só marca a posição (não notifica o passado).
+let lastHitId = null
+async function checkNewHits() {
+  const rows = await getJson(lastHitId == null ? "/api/hits" : `/api/hits?after=${lastHitId}`)
+  if (rows.length && lastHitId != null && notify.value) notifyHits(rows)
+  lastHitId = Math.max(lastHitId ?? 0, ...rows.map((r) => r.id))
+}
+
 async function refresh() {
   try {
-    await Promise.all([loadItems(), loadChannels()])
+    await Promise.all([loadItems(), loadChannels(), checkNewHits()])
     online.value = true
   } catch {
     online.value = false
@@ -56,6 +72,22 @@ onUnmounted(() => clearInterval(timer))
           <p class="text-xs text-zinc-500">// monitor de promoções no telegram</p>
         </div>
       </div>
+      <div class="flex flex-wrap items-center gap-2">
+      <button
+        v-if="supported"
+        class="flex items-center gap-2 rounded-sm border px-3 py-1.5 text-[11px] tracking-widest uppercase transition disabled:cursor-not-allowed"
+        :class="notify ? 'border-neon/50 bg-neon/5 text-neon hover:shadow-[0_0_14px_-2px_rgb(57_255_20/0.5)]' : 'border-purple-800/60 bg-black/60 text-zinc-400 hover:border-purple-500 hover:text-purple-200'"
+        :aria-pressed="notify"
+        :disabled="notifyPerm === 'denied'"
+        :title="notifyPerm === 'denied' ? 'Bloqueadas no navegador: libere nas permissões do site (ícone ao lado do endereço)' : 'Notificar no navegador quando aparecer uma ocorrência'"
+        @click="toggleNotify"
+      >
+        <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          <path v-if="!notify" d="m3 3 18 18" />
+        </svg>
+        Notif {{ notifyPerm === "denied" ? "bloqueadas" : notify ? "on" : "off" }}
+      </button>
       <div class="flex items-center gap-2 rounded-sm border border-purple-800/60 bg-black/60 px-3 py-1.5 text-[11px] tracking-widest uppercase" role="status">
         <span class="relative flex size-2">
           <span v-if="online" class="absolute inline-flex size-full animate-ping rounded-full bg-neon opacity-75"></span>
@@ -64,6 +96,7 @@ onUnmounted(() => clearInterval(timer))
         <span :class="online ? 'text-neon' : online === false ? 'text-red-400' : 'text-zinc-500'">
           API {{ online ? "online" : online === false ? "offline" : "..." }}
         </span>
+      </div>
       </div>
     </header>
 
