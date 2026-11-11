@@ -11,6 +11,13 @@ assert not matches("rtx 4070", "RTX 4060 em promoção")  # exige todos os termo
 assert prices("De R$ 4.000 por R$ 3.499,90 no pix") == [4000, 3499.9]
 assert prices("R$1299 | cupom R$ 50 OFF") == [1299]
 assert prices("R$ 50,00 off, R$ 3.499, no pix") == [3499]
+# parcelas, cupons e frete não são o preço (casos reais dos canais)
+assert prices("💵 R$ 3.329,10 Ou em até 12x R$ 308,25 sem juros") == [3329.1]
+assert prices("R$ 2.378,99 ou 10x de R$ 237,90") == [2378.99]
+assert prices("R$ 2.000 em 12x sem juros de R$ 166,67") == [2000]
+assert prices("🔥 R$ 1.749 no PIX 🏷 Resgate o cupom de R$100: https://x") == [1749]
+assert prices("R$ 899 + frete: R$ 25 | cashback de R$ 40 | economize R$ 300") == [899]
+assert prices("De R$4.640 Por R$2.842, no pix") == [4640, 2842]
 
 con = connect(":memory:")
 init(con)
