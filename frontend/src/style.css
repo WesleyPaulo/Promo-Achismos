@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #05040a;
+  --color-neon: #39ff14;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer base {
+  body {
+    background-image:
+      radial-gradient(60rem 28rem at 50% -8rem, rgb(126 34 206 / 0.22), transparent),
+      linear-gradient(rgb(168 85 247 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(168 85 247 / 0.05) 1px, transparent 1px);
+    background-size: auto, 32px 32px, 32px 32px;
+  }
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+@layer components {
+  .card { @apply relative rounded-sm bg-zinc-950/85 p-5 ring-1 ring-purple-800/50 shadow-[0_0_40px_-16px_rgb(168_85_247/0.45)] backdrop-blur; }
+  .card::before, .card::after { content: ""; position: absolute; width: 14px; height: 14px; border-color: var(--color-neon); }
+  .card::before { top: -1px; left: -1px; border-top-width: 2px; border-left-width: 2px; }
+  .card::after { right: -1px; bottom: -1px; border-right-width: 2px; border-bottom-width: 2px; }
+  .card-title { @apply text-xs font-bold tracking-[0.2em] text-purple-200 uppercase; }
+  .hint { @apply mt-1 text-xs text-zinc-500; }
+  .input { @apply rounded-sm border border-purple-900/80 bg-black/70 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-neon focus:ring-1 focus:ring-neon/40 focus:outline-none; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-sm bg-neon px-4 py-2 text-xs font-bold tracking-widest text-black uppercase transition hover:shadow-[0_0_18px_rgb(57_255_20/0.6)] focus-visible:ring-2 focus-visible:ring-neon/50 focus-visible:outline-none; }
+  .btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-sm border border-purple-700/70 px-3 py-2 text-xs tracking-widest text-purple-200 uppercase transition hover:border-neon hover:text-neon; }
+  .cursor { animation: blink 1s steps(1) infinite; }
+}
